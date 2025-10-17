@@ -219,7 +219,7 @@ hover_text = [
     f"🔵 Near limit: {n:.2f} m<br>"
     f"🟠 Far limit: {'∞' if math.isinf(fa) else f'{fa:.2f} m'}<br>"
     f"🟦 DoF width: {'∞' if math.isinf(fa) else f'{(fa - n):.2f} m'}"
-    f"🟩 Hyperfocal: {H:.2f} m<br>"
+    f"🟩 Hyperfocal: {H_m:.2f} m<br>"
     for x, n, fa in zip(x_m, near_curve, far_curve)
 ]
 
