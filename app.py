@@ -268,7 +268,7 @@ fig.add_trace(go.Scatter(
     name='Focus Point',
     marker=dict(color='red', size=10),
     text=[f"Focus\n{focus:.2f} m"],
-    textposition='top center'
+    textposition='bottom center'
 ))
 
 # Mark the near and far limits
@@ -282,7 +282,7 @@ fig.add_trace(go.Scatter(
 ))
 
 fig.add_trace(go.Scatter(
-    x=[far if not math.isinf(far) else H * 2], y=[0.025],
+    x=[far if not math.isinf(far) else (focus+10)], y=[0.025],
     mode='markers+text',
     name='Far Limit',
     marker=dict(color='orange', size=8),
