@@ -94,10 +94,23 @@ if "shutter_s" not in st.session_state:
 if "iso" not in st.session_state:
     st.session_state["iso"] = 100
 
+# with col1:
+#     f_mm = st.slider("焦距 f (mm)", min_value=int(lens_info.get("min_f",14)), max_value=int(lens_info.get("max_f",30)), value=int(st.session_state["f_mm"]))
+#     st.session_state["f_mm"] = f_mm
+#     st.write(f"镜头焦距范围：{lens_info.get('min_f')}–{lens_info.get('max_f')} mm")
+
 with col1:
-    f_mm = st.slider("焦距 f (mm)", min_value=int(lens_info.get("min_f",14)), max_value=int(lens_info.get("max_f",30)), value=int(st.session_state["f_mm"]))
+    f_mm = st.number_input(
+        "焦距 f (mm)",
+        min_value=float(lens_info.get("min_f", 14)),
+        max_value=float(lens_info.get("max_f", 30)),
+        value=float(st.session_state["f_mm"]),
+        step=0.1,
+        format="%.1f"
+    )
     st.session_state["f_mm"] = f_mm
     st.write(f"镜头焦距范围：{lens_info.get('min_f')}–{lens_info.get('max_f')} mm")
+
 
 with col2:
     aperture = st.selectbox("光圈 (f/值)", options=APERTURE, index=APERTURE.index(st.session_state["aperture"]) if st.session_state["aperture"] in APERTURE else 4)
