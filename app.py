@@ -117,7 +117,7 @@ with col2:
     st.session_state["aperture"] = aperture
 
 with col3:
-    focus_m = st.number_input("对焦距离 (m)", min_value=0.01, max_value=1e9, value=float(st.session_state["focus_m"]), step=0.1, format="%.2f")
+    focus_m = st.number_input("对焦距离 (m)", min_value=0.01, max_value=1e9, value=float(st.session_state["focus_m"]), step=10.0, format="%.2f")
     st.session_state["focus_m"] = focus_m
 
 st.markdown("---")
