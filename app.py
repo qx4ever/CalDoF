@@ -252,7 +252,7 @@ if not math.isinf(far):
 else:
     # Extend fill region to hyperfocal distance * 2 if far is infinity
     fig.add_trace(go.Scatter(
-        x=[near, H * 2, H * 2, near],
+        x=[near, focus+10, focus+10, near],
         y=[0, 0, 0.05, 0.05],
         fill='toself',
         fillcolor='rgba(135, 206, 250, 0.4)',
