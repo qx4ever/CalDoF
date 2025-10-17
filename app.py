@@ -213,15 +213,15 @@ for i, s_mm in enumerate(x_mm):
 # st.markdown("---")
 # st.caption("此工具基于常见光学公式。结果为理论值，实际可见清晰范围受拍摄目标、显示放大倍数及输出尺寸影响。")
 
-# Build hover info for each focus distance in x_m array
-hover_text = [
-    f"🔴 Focus point: {x:.2f} m<br>"
-    f"🔵 Near limit: {n:.2f} m<br>"
-    f"🟠 Far limit: {'∞' if math.isinf(fa) else f'{fa:.2f} m'}<br>"
-    f"🟦 DoF width: {'∞' if math.isinf(fa) else f'{(fa - n):.2f} m'}"
-    f"🟩 Hyperfocal: {H_m:.2f} m<br>"
-    for x, n, fa in zip(x_m, near_curve, far_curve)
-]
+# # Build hover info for each focus distance in x_m array
+# hover_text = [
+#     f"🔴 Focus point: {x:.2f} m<br>"
+#     f"🔵 Near limit: {n:.2f} m<br>"
+#     f"🟠 Far limit: {'∞' if math.isinf(fa) else f'{fa:.2f} m'}<br>"
+#     f"🟦 DoF width: {'∞' if math.isinf(fa) else f'{(fa - n):.2f} m'}"
+#     f"🟩 Hyperfocal: {H_m:.2f} m<br>"
+#     for x, n, fa in zip(x_m, near_curve, far_curve)
+# ]
 
 # Convert values to meters
 near = Dn_mm / 1000.0
@@ -319,15 +319,15 @@ fig.update_layout(
     template="plotly_white"
 )
 
-# Add hoverable near/far curves for reference (optional)
-fig.add_trace(go.Scatter(
-    x=x_m, y=np.ones_like(x_m),
-    mode='lines',
-    name='Focus position reference',
-    line=dict(color='gray', width=1, dash='dot'),
-    text=hover_text,
-    hoverinfo='text'
-))
+# # Add hoverable near/far curves for reference (optional)
+# fig.add_trace(go.Scatter(
+#     x=x_m, y=np.ones_like(x_m),
+#     mode='lines',
+#     name='Focus position reference',
+#     line=dict(color='gray', width=1, dash='dot'),
+#     text=hover_text,
+#     hoverinfo='text'
+# ))
 
 # Display figure in Streamlit
 st.plotly_chart(fig, use_container_width=True)
