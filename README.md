@@ -1,4 +1,4 @@
-# DOF Calculator（Streamlit）  
+# DOF Calculator
 景深计算器，支持：图形化景深分布、相机/镜头 CoC 自动选择、导出/导入 Preset（JSON）、曝光（EV）计算。  
 
 ## 功能
