@@ -214,94 +214,101 @@ for i, s_mm in enumerate(x_mm):
 # st.caption("此工具基于常见光学公式。结果为理论值，实际可见清晰范围受拍摄目标、显示放大倍数及输出尺寸影响。")
 
 
-# Prepare hover information
-hover_text = [
-    f"Focus distance: {x:.2f} m<br>"
-    f"Near limit: {near:.2f} m<br>"
-    f"Far limit: {'∞' if math.isinf(far) else f'{far:.2f} m'}<br>"
-    f"Total DoF: {'∞' if math.isinf(far) else f'{(far - near):.2f} m'}"
-    for x, near, far in zip(x_m, near_curve, far_curve)
-]
+# Convert values to meters
+near = Dn_mm / 1000.0
+far = float('inf') if math.isinf(Df_mm) else Df_mm / 1000.0
+focus = focus_m
+H = H_m
+
+# Define plot range
+x_min = max(0.01, near * 0.5)
+x_max = (far if not math.isinf(far) else H * 2)
+x = np.linspace(x_min, x_max, 500)
+y = np.zeros_like(x)
 
 # Create Plotly figure
 fig = go.Figure()
 
-# Near limit curve
+# Fill in-focus region between near and far distances
+if not math.isinf(far):
+    fig.add_trace(go.Scatter(
+        x=[near, far, far, near],
+        y=[0, 0, 0.05, 0.05],
+        fill='toself',
+        fillcolor='rgba(135, 206, 250, 0.4)',  # light blue
+        line=dict(color='rgba(135, 206, 250, 0)'),
+        hoverinfo='skip',
+        name='In-focus region'
+    ))
+else:
+    # Extend fill region to hyperfocal distance * 2 if far is infinity
+    fig.add_trace(go.Scatter(
+        x=[near, H * 2, H * 2, near],
+        y=[0, 0, 0.05, 0.05],
+        fill='toself',
+        fillcolor='rgba(135, 206, 250, 0.4)',
+        line=dict(color='rgba(135, 206, 250, 0)'),
+        hoverinfo='skip',
+        name='In-focus region (extends to ∞)'
+    ))
+
+# Mark the focus point
 fig.add_trace(go.Scatter(
-    x=x_m, y=near_curve,
-    mode='lines',
-    name='Near limit (D_near)',
-    line=dict(color='blue', width=2),
-    hoverinfo='skip'  # handled in fill trace
+    x=[focus], y=[0.025],
+    mode='markers+text',
+    name='Focus Point',
+    marker=dict(color='red', size=10),
+    text=[f"Focus\n{focus:.2f} m"],
+    textposition='top center'
 ))
 
-# Far limit curve
+# Mark the near and far limits
 fig.add_trace(go.Scatter(
-    x=x_m, y=far_curve,
-    mode='lines',
-    name='Far limit (D_far)',
-    line=dict(color='orange', width=2),
-    hoverinfo='skip'
-))
-
-# Fill between near and far curves to visualize DoF area
-fig.add_trace(go.Scatter(
-    x=np.concatenate([x_m, x_m[::-1]]),
-    y=np.concatenate([far_curve, near_curve[::-1]]),
-    fill='toself',
-    fillcolor='rgba(135, 206, 250, 0.3)',  # light sky blue
-    line=dict(color='rgba(255,255,255,0)'),
-    hoverinfo='text',
-    text=hover_text,
-    name='Depth of Field'
-))
-
-# Add markers for current focus and hyperfocal distance
-fig.add_trace(go.Scatter(
-    x=[focus_m], y=[Dn_mm / 1000.0],
-    mode='markers',
-    name='Current near limit',
-    marker=dict(color='blue', size=8, symbol='circle')
+    x=[near], y=[0.025],
+    mode='markers+text',
+    name='Near Limit',
+    marker=dict(color='blue', size=8),
+    text=[f"Near\n{near:.2f} m"],
+    textposition='top center'
 ))
 
 fig.add_trace(go.Scatter(
-    x=[focus_m],
-    y=[float('inf') if math.isinf(Df_mm) else Df_mm / 1000.0],
-    mode='markers',
-    name='Current far limit',
-    marker=dict(color='orange', size=8, symbol='circle')
+    x=[far if not math.isinf(far) else H * 2], y=[0.025],
+    mode='markers+text',
+    name='Far Limit',
+    marker=dict(color='orange', size=8),
+    text=[f"Far\n{'∞' if math.isinf(far) else f'{far:.2f} m'}"],
+    textposition='top center'
 ))
 
-fig.add_hline(
-    y=H_m, line_dash='dash', line_color='green',
-    annotation_text=f"Hyperfocal H = {H_m:.2f} m",
-    annotation_position="top left"
-)
+# Add hyperfocal marker (optional)
+fig.add_trace(go.Scatter(
+    x=[H], y=[0.025],
+    mode='markers+text',
+    name='Hyperfocal Distance',
+    marker=dict(color='green', size=8, symbol='triangle-up'),
+    text=[f"H = {H:.2f} m"],
+    textposition='bottom center'
+))
 
-# Log–log axes
-fig.update_xaxes(
-    type="log",
-    title_text="Focus distance (m) — log scale",
-    showgrid=True,
-    gridcolor='lightgray'
-)
-fig.update_yaxes(
-    type="log",
-    title_text="Sharpness boundary (m) — log scale",
-    showgrid=True,
-    gridcolor='lightgray'
-)
-
-# Layout and styling
+# Layout configuration
 fig.update_layout(
-    title="📈 Interactive Depth of Field Distribution (Nikon Z5 + Nikkor 14-30mm)",
-    legend=dict(x=0.02, y=0.98),
-    hovermode="x unified",
-    margin=dict(l=40, r=40, t=80, b=40),
+    title="📷 Depth of Field (1D View Along Camera Axis)",
+    xaxis=dict(
+        title="Distance from camera (m)",
+        type="log",
+        showgrid=True,
+        gridcolor='lightgray',
+        zeroline=False
+    ),
+    yaxis=dict(
+        visible=False,
+        range=[-0.02, 0.1]
+    ),
+    showlegend=False,
+    margin=dict(l=40, r=40, t=60, b=40),
     template="plotly_white"
 )
 
-# Display interactive chart in Streamlit
+# Display figure in Streamlit
 st.plotly_chart(fig, use_container_width=True)
-
-
