@@ -105,7 +105,8 @@ with col1:
         min_value=float(lens_info.get("min_f", 14)),
         max_value=float(lens_info.get("max_f", 30)),
         value=float(st.session_state["f_mm"]),
-        step=1,
+        step=1,          # 步长设置为 1 mm
+        format="%.1f"
     )
     st.session_state["f_mm"] = f_mm
     st.write(f"镜头焦距范围：{lens_info.get('min_f')}–{lens_info.get('max_f')} mm")
