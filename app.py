@@ -14,7 +14,7 @@ from utils import APERTURE
 
 st.set_page_config(page_title="DOF Calculator — Nikon Z5 & More", layout="centered")
 
-st.title("📷 景深计算器(Streamlit)")
+st.title("📷 景深计算器")
 st.markdown("""
 输入相机/镜头参数来计算最近/最远对焦距离、景深，并显示**景深分布曲线**。
 支持相机/镜头 CoC 自动选择；支持导出/导入常用参数(preset JSON)。
@@ -105,7 +105,7 @@ with col1:
         min_value=float(lens_info.get("min_f", 14)),
         max_value=float(lens_info.get("max_f", 30)),
         value=float(st.session_state["f_mm"]),
-        step=0.1,
+        step=1,
         format="%.1f"
     )
     st.session_state["f_mm"] = f_mm
