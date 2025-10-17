@@ -5,8 +5,12 @@ import io
 import math
 import matplotlib.pyplot as plt
 from datetime import datetime
+# --- Interactive Plotly Depth of Field visualization ---
+import plotly.graph_objects as go
+import numpy as np
 
 from utils import calc_dof_mm, hyperfocal_mm, format_distance_m, cameras, lenses
+from utils import APERTURE
 
 st.set_page_config(page_title="DOF Calculator — Nikon Z5 & More", layout="centered")
 
@@ -96,11 +100,11 @@ with col1:
     st.write(f"镜头焦距范围：{lens_info.get('min_f')}–{lens_info.get('max_f')} mm")
 
 with col2:
-    aperture = st.selectbox("光圈 (f/值)", options=[4,5.6,8,11,16,22], index=[4,5.6,8,11,16,22].index(st.session_state["aperture"]) if st.session_state["aperture"] in [4,5.6,8,11,16,22] else 2)
+    aperture = st.selectbox("光圈 (f/值)", options=APERTURE, index=APERTURE.index(st.session_state["aperture"]) if st.session_state["aperture"] in APERTURE else 4)
     st.session_state["aperture"] = aperture
 
 with col3:
-    focus_m = st.number_input("对焦距离 (m)", min_value=0.1, max_value=1000.0, value=float(st.session_state["focus_m"]), step=0.1, format="%.2f")
+    focus_m = st.number_input("对焦距离 (m)", min_value=0.01, max_value=1e9, value=float(st.session_state["focus_m"]), step=0.1, format="%.2f")
     st.session_state["focus_m"] = focus_m
 
 st.markdown("---")
@@ -189,28 +193,115 @@ for i, s_mm in enumerate(x_mm):
     near_curve[i] = dn_mm / 1000.0
     far_curve[i] = np.inf if math.isinf(df_mm) else df_mm / 1000.0
 
-# Plot using matplotlib (single plot)
-fig, ax = plt.subplots(figsize=(7,4))
-ax.set_xscale('log')
-ax.plot(x_m, near_curve, label='最近点 (D_near)', linewidth=1)
-ax.plot(x_m, far_curve, label='最远点 (D_far)', linewidth=1)
-# plot current focus point and its near/far
-ax.scatter([focus_m], [Dn_mm/1000.0], marker='o')
-ax.scatter([focus_m], [float('inf') if math.isinf(Df_mm) else Df_mm/1000.0], marker='o')
-# hyperfocal line
-ax.axhline(H_m, linestyle='--', linewidth=0.8, label=f'H = {H_m:.2f} m')
-ax.set_xlabel("对焦距离 (m) — 对数刻度")
-ax.set_ylabel("清晰范围边界 (m)")
-ax.set_title("景深分布(随对焦距离变化)")
-ax.legend()
-ax.grid(True, which='both', ls=':', linewidth=0.4)
-st.pyplot(fig)
+# # Plot using matplotlib (single plot)
+# fig, ax = plt.subplots(figsize=(7,4))
+# ax.set_xscale('log')
+# ax.plot(x_m, near_curve, label='Nearest Point', linewidth=1)
+# ax.plot(x_m, far_curve, label='Farthest Point', linewidth=1)
+# # plot current focus point and its near/far
+# ax.scatter([focus_m], [Dn_mm/1000.0], marker='o')
+# ax.scatter([focus_m], [float('inf') if math.isinf(Df_mm) else Df_mm/1000.0], marker='o')
+# # hyperfocal line
+# ax.axhline(H_m, linestyle='--', linewidth=0.8, label=f'H = {H_m:.2f} m')
+# ax.set_xlabel("Focus distance (m)")
+# ax.set_ylabel("DoF (m)")
+# ax.set_title("Depth of Field")
+# ax.legend()
+# ax.grid(True, which='both', ls=':', linewidth=0.4)
+# st.pyplot(fig)
 
-st.markdown("---")
-st.caption("此工具基于常见光学公式。结果为理论值，实际可见清晰范围受拍摄目标、显示放大倍数及输出尺寸影响。")
+# st.markdown("---")
+# st.caption("此工具基于常见光学公式。结果为理论值，实际可见清晰范围受拍摄目标、显示放大倍数及输出尺寸影响。")
 
-st.markdown("## 开源 & 部署")
-st.markdown("""
-把本仓库推到 GitHub 后，在 [Streamlit Cloud](https://streamlit.io/cloud) 新建 App，选择该仓库和 `app.py` 即可自动部署。  
-也可部署到任何支持 Streamlit 的平台。
-""")
+
+# Prepare hover information
+hover_text = [
+    f"Focus distance: {x:.2f} m<br>"
+    f"Near limit: {near:.2f} m<br>"
+    f"Far limit: {'∞' if math.isinf(far) else f'{far:.2f} m'}<br>"
+    f"Total DoF: {'∞' if math.isinf(far) else f'{(far - near):.2f} m'}"
+    for x, near, far in zip(x_m, near_curve, far_curve)
+]
+
+# Create Plotly figure
+fig = go.Figure()
+
+# Near limit curve
+fig.add_trace(go.Scatter(
+    x=x_m, y=near_curve,
+    mode='lines',
+    name='Near limit (D_near)',
+    line=dict(color='blue', width=2),
+    hoverinfo='skip'  # handled in fill trace
+))
+
+# Far limit curve
+fig.add_trace(go.Scatter(
+    x=x_m, y=far_curve,
+    mode='lines',
+    name='Far limit (D_far)',
+    line=dict(color='orange', width=2),
+    hoverinfo='skip'
+))
+
+# Fill between near and far curves to visualize DoF area
+fig.add_trace(go.Scatter(
+    x=np.concatenate([x_m, x_m[::-1]]),
+    y=np.concatenate([far_curve, near_curve[::-1]]),
+    fill='toself',
+    fillcolor='rgba(135, 206, 250, 0.3)',  # light sky blue
+    line=dict(color='rgba(255,255,255,0)'),
+    hoverinfo='text',
+    text=hover_text,
+    name='Depth of Field'
+))
+
+# Add markers for current focus and hyperfocal distance
+fig.add_trace(go.Scatter(
+    x=[focus_m], y=[Dn_mm / 1000.0],
+    mode='markers',
+    name='Current near limit',
+    marker=dict(color='blue', size=8, symbol='circle')
+))
+
+fig.add_trace(go.Scatter(
+    x=[focus_m],
+    y=[float('inf') if math.isinf(Df_mm) else Df_mm / 1000.0],
+    mode='markers',
+    name='Current far limit',
+    marker=dict(color='orange', size=8, symbol='circle')
+))
+
+fig.add_hline(
+    y=H_m, line_dash='dash', line_color='green',
+    annotation_text=f"Hyperfocal H = {H_m:.2f} m",
+    annotation_position="top left"
+)
+
+# Log–log axes
+fig.update_xaxes(
+    type="log",
+    title_text="Focus distance (m) — log scale",
+    showgrid=True,
+    gridcolor='lightgray'
+)
+fig.update_yaxes(
+    type="log",
+    title_text="Sharpness boundary (m) — log scale",
+    showgrid=True,
+    gridcolor='lightgray'
+)
+
+# Layout and styling
+fig.update_layout(
+    title="📈 Interactive Depth of Field Distribution (Nikon Z5 + Nikkor 14-30mm)",
+    legend=dict(x=0.02, y=0.98),
+    hovermode="x unified",
+    margin=dict(l=40, r=40, t=80, b=40),
+    template="plotly_white"
+)
+
+# Display interactive chart in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+

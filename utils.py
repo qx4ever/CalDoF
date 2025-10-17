@@ -1,4 +1,7 @@
 # utils.py
+APERTURE = [1.7,2,2.8,4,5.6,6.3,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
+
+
 import math
 
 # Camera CoC table (典型值，单位 mm). 你可自行扩展。
@@ -13,6 +16,7 @@ cameras = {
 # Simple lens entries (min/max focal length in mm)
 lenses = {
     "Nikkor 14-30mm f/4": {"min_f": 14, "max_f": 30},
+    "Nikkor 24-200mm f/4-6.3": {"min_f": 24, "max_f": 200},
     "Standard 50mm": {"min_f": 50, "max_f": 50},
     "Zoom 24-70mm": {"min_f": 24, "max_f": 70}
 }
